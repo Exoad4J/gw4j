@@ -34,7 +34,7 @@ import javax.swing.JPanel;
 public class ControlPanel extends JPanel implements ActionListener, ChangeListener {
   public static final int DEF_SIZE = Size.width - 200;
   private JEditorPane notice;
-  private JComboBox<String> amountOfShades;
+  private JComboBox<String> amountOfShades, styleMount;
   private JLabel jl;
   private JButton confirmColors;
   private JScrollPane colorsPanel;
@@ -67,20 +67,17 @@ public class ControlPanel extends JPanel implements ActionListener, ChangeListen
 
     public ColorAccessPanel(int i) {
       jl = new JLabel("Color (r,g,b)" + i);
-      r = new JTextField(2);
-      r.setText("255");
+      r = new JTextField("255", 2);
       r.setToolTipText("Red");
       r.setBorder(BorderFactory.createLineBorder(Color.BLACK));
       r.setDocument(new DocumentLimit(3));
       new ControlPanel.KeyLoggedListener(r);
-      g = new JTextField(2);
-      g.setText("255");
+      g = new JTextField("255", 2);
       g.setToolTipText("Green");
       g.setDocument(new DocumentLimit(3));
       g.setBorder(BorderFactory.createLineBorder(Color.BLACK));
       new ControlPanel.KeyLoggedListener(g);
-      b = new JTextField(2);
-      b.setText("255");
+      b = new JTextField("255", 2);
       b.setToolTipText("Blue");
       b.setBorder(BorderFactory.createLineBorder(Color.BLACK));
       b.setDocument(new DocumentLimit(3));
@@ -164,7 +161,6 @@ public class ControlPanel extends JPanel implements ActionListener, ChangeListen
         @Override
         public void keyReleased(KeyEvent e) {
         }
-
       });
     }
   }
@@ -186,11 +182,16 @@ public class ControlPanel extends JPanel implements ActionListener, ChangeListen
 
     jl = new JLabel("Amount of Shades (1-10)");
 
-    amountOfShades = new JComboBox<>(new String[] { "2", "2" });
+    amountOfShades = new JComboBox<>(new String[] { "1", "2" });
     amountOfShades.setSelectedIndex(0);
     amountOfShades.addActionListener(this);
     amountOfShades.setToolTipText("Set the number of shades to have in your gradient.");
 
+    styleMount = new JComboBox<>(new String[] {"Regular"});
+    styleMount.setSelectedIndex(0);
+    styleMount.addActionListener(this);
+    styleMount.setToolTipText("Set the style of the gradient.");
+    
     colorsPanel = new JScrollPane();
     colorsPanel.setPreferredSize(new Dimension(DEF_SIZE, Size.height - 400));
     colorsPanel.setBorder(BorderFactory.createEmptyBorder());
@@ -203,39 +204,94 @@ public class ControlPanel extends JPanel implements ActionListener, ChangeListen
     add(notice);
     add(jl);
     add(hostFrame.getColorSaveBTN());
+    add(styleMount);
+    // EVERY STATIC COMPONENT GOES ABOVE
     add(amountOfShades);
   }
 
   private ColorAccessPanel[] colorAccessPanels;
   private Color[] colorsGrad;
   private boolean generated = false;
-  private JSlider[] colorDeviation;
+  private UnsafePair[] colorDeviation;
   private int xs = 0, ys = 0, xs2 = Size.width - 230, ys2 = Size.height;
 
   @Override
   public void actionPerformed(ActionEvent e) {
-    if (e.getSource().equals(amountOfShades) && !generated) {
-      int amount = Integer.parseInt((String) amountOfShades.getSelectedItem());
-      colorAccessPanels = new ColorAccessPanel[amount];
-      for (int i = 0; i < amount; i++) {
-        colorAccessPanels[i] = new ColorAccessPanel(i + 1);
-        add(colorAccessPanels[i]);
-        add(Box.createVerticalStrut(20));
-      }
-      colorDeviation = new JSlider[amount * 2];
-      for (int i = 0; i < amount * 2; i++) {
-        colorDeviation[i] = new JSlider(SwingConstants.HORIZONTAL, 0, i % 2 == 0 ? Size.width - 230 : Size.height, 0);
-        colorDeviation[i].addChangeListener(this);
-        colorDeviation[i].setToolTipText(i % 2 == 0 ? Y_LINE : X_LINE);
-        add(colorDeviation[i]);
-        if(i == i / 2) {
+    if (e.getSource().equals(amountOfShades)) {
+      if (!generated) {
+        int amount = Integer.parseInt((String) amountOfShades.getSelectedItem());
+        colorAccessPanels = new ColorAccessPanel[amount];
+        for (int i = 0; i < amount; i++) {
+          colorAccessPanels[i] = new ColorAccessPanel(i + 1);
+          add(colorAccessPanels[i]);
           add(Box.createVerticalStrut(20));
         }
+        colorDeviation = new UnsafePair[amount * 2];
+        for (int i = 0; i < amount * 2; i++) {
+          JSlider x = new JSlider(SwingConstants.HORIZONTAL, 0, Size.width - 230, 0);
+          x.setToolTipText(X_LINE);
+          JSlider y = new JSlider(SwingConstants.HORIZONTAL, 0, Size.height, 0);
+          y.setToolTipText(Y_LINE);
+          colorDeviation[i] = new UnsafePair<Integer>(x, y, i);
+        }
+        /*
+         * colorDeviation = new JSlider[amount * 2];
+         * for (int i = 0; i < amount * 2; i++) {
+         * colorDeviation[i] = new JSlider(SwingConstants.HORIZONTAL, 0, i % 2 == 0 ?
+         * Size.width - 230 : Size.height, 0);
+         * colorDeviation[i].addChangeListener(this);
+         * colorDeviation[i].setToolTipText(i % 2 == 0 ? Y_LINE : X_LINE);
+         * add(colorDeviation[i]);
+         * if(i == i / 2) {
+         * add(Box.createVerticalStrut(20));
+         * }
+         * }
+         */
+        add(confirmColors);
+        repaint();
+        revalidate();
+        generated = true;
+      } else {
+        // remove the old elements
+        for (int i = 0; i < colorAccessPanels.length; i++) {
+          remove(colorAccessPanels[i]);
+        }
+        int amount = Integer.parseInt((String) amountOfShades.getSelectedItem());
+        colorAccessPanels = new ColorAccessPanel[amount];
+        for (int i = 0; i < amount; i++) {
+          colorAccessPanels[i] = new ColorAccessPanel(i + 1);
+          add(colorAccessPanels[i]);
+          add(Box.createVerticalStrut(20));
+        }
+        colorDeviation = new UnsafePair[amount * 2];
+        for (int i = 0; i < amount * 2; i++) {
+          JSlider x = new JSlider(SwingConstants.HORIZONTAL, 0, Size.width - 230, 0);
+          x.setToolTipText(X_LINE);
+          JSlider y = new JSlider(SwingConstants.HORIZONTAL, 0, Size.height, 0);
+          y.setToolTipText(Y_LINE);
+          colorDeviation[i] = new UnsafePair<JComponent>(x, y, i);
+          add(colorDeviation[i].first);
+          add(colorDeviation[i].second);
+            add(Box.createVerticalStrut(20));
+        }
+        /*
+         * colorDeviation = new JSlider[amount * 2];
+         * for (int i = 0; i < amount * 2; i++) {
+         * colorDeviation[i] = new JSlider(SwingConstants.HORIZONTAL, 0, i % 2 == 0 ?
+         * Size.width - 230 : Size.height, 0);
+         * colorDeviation[i].addChangeListener(this);
+         * colorDeviation[i].setToolTipText(i % 2 == 0 ? Y_LINE : X_LINE);
+         * add(colorDeviation[i]);
+         * if(i == i / 2) {
+         * add(Box.createVerticalStrut(20));
+         * }
+         * }
+         */
+        add(confirmColors);
+        repaint();
+        revalidate();
+
       }
-      add(confirmColors);
-      repaint();
-      revalidate();
-      generated = true;
     } else if (e.getSource().equals(confirmColors)) {
       int i = 0;
       colorsGrad = new Color[colorAccessPanels.length];
@@ -258,18 +314,5 @@ public class ControlPanel extends JPanel implements ActionListener, ChangeListen
 
   @Override
   public void stateChanged(ChangeEvent e) {
-    if (e.getSource().equals(colorDeviation[0])) {
-      xs = colorDeviation[0].getValue();
-      colorDeviation[0].setToolTipText("X position: " + xs);
-    } else if (e.getSource().equals(colorDeviation[1])) {
-      ys = colorDeviation[1].getValue();
-      colorDeviation[1].setToolTipText("Y position: " + ys);
-    } else if (e.getSource().equals(colorDeviation[2])) {
-      xs2 = colorDeviation[2].getValue();
-      colorDeviation[2].setToolTipText("X position: " + xs2);
-    } else if (e.getSource().equals(colorDeviation[3])) {
-      ys2 = colorDeviation[3].getValue();
-      colorDeviation[3].setToolTipText("Y position: " + ys2);
-    }
   }
 }

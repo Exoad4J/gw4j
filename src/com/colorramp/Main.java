@@ -10,11 +10,13 @@ import javax.swing.JComponent;
 import com.exoad.main.UIFactory;
 
 public class Main {
+  public static final LoadingWindow load = new LoadingWindow();
+  
   private UIFactory ui;
 
   public Main(JComponent mainDef) {
     ui = new UIFactory(false, null, mainDef);
-    ui.setTitle("~ Gradient Wrapper4CXX");
+    ui.setTitle("~ Gradient BG Wrapper4J");
     try {
       ui.setIconImage(new ImageIcon("resource/unknown.png").getImage());
     } catch (Exception e) {

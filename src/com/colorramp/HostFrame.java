@@ -40,11 +40,7 @@ public class HostFrame extends JPanel implements ActionListener {
   public HostFrame() {
     setPreferredSize(new Dimension(Size.width - 230, Size.height));
     setMinimumSize(new Dimension(Size.width - 230, Size.height));
-    // setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-    // setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-    setOpaque(true);
-    setBackground(Color.BLUE);
-
+    setDoubleBuffered(true);
     hostPanel = new JPanel() {
       @Override
       public void paintComponent(Graphics g) {
@@ -138,35 +134,60 @@ public class HostFrame extends JPanel implements ActionListener {
   @Override
   public void actionPerformed(ActionEvent e) {
     if (e.getSource().equals(getCurrentLoad)) {
+      long time = System.currentTimeMillis();
+
       try {
         File parentDir = new File("gw4_exoad");
         if (!parentDir.exists()) {
           parentDir.mkdirs();
         }
-        long time = System.currentTimeMillis();
-        File fdfs_480x = new File("gw4_exoad/gw4_" + time + "_480x.png");
+        String currTimeStr = Utility.millisTimeToString(time);
+        File file = new File("gw4_exoad/gen_" + currTimeStr);
+        if (!file.isDirectory() || !file.exists()) {
+          file.mkdirs();
+        }
+
+        File fdfs_480x = new File("gw4_exoad/gen_" + currTimeStr + "/gw4_" + time + "_480x.png");
         if (!fdfs_480x.exists()) {
           fdfs_480x.createNewFile();
         }
         ImageIO.write(upscale(xs, ys, x2s, y2s, rand1, rand2, true, Size.RES480.first, Size.RES480.second), "png",
             fdfs_480x);
-        File fdfs_720x = new File("gw4_exoad/gw4_" + time + "_720x.png");
+        System.out.println("Rendered 480");
+        File fdfs_720x = new File("gw4_exoad/gen_" + currTimeStr + "/gw4_" + time + "_720x.png");
         if (!fdfs_720x.exists()) {
           fdfs_720x.createNewFile();
         }
         ImageIO.write(upscale(xs, ys, x2s, y2s, rand1, rand2, true, Size.RES720.first, Size.RES720.second), "png",
             fdfs_720x);
-        File fdfs_1080x = new File("gw4_exoad/gw4_" + time + "_1080x.png");
+        System.out.println("Rendered 720");
+        File fdfs_1080x = new File("gw4_exoad/gen_" + currTimeStr + "/gw4_" + time + "_1080x.png");
         if (!fdfs_1080x.exists()) {
           fdfs_1080x.createNewFile();
         }
         ImageIO.write(upscale(xs, ys, x2s, y2s, rand1, rand2, true, Size.RES1080.first, Size.RES1080.second), "png",
             fdfs_1080x);
-        Desktop.getDesktop().open(parentDir);
+        System.out.println("Rendered 1080");
+        File fdfs_1440x = new File("gw4_exoad/gen_" + currTimeStr + "/gw4_" + time + "_1440x.png");
+        if (!fdfs_1440x.exists()) {
+          fdfs_1440x.createNewFile();
+        }
+        ImageIO.write(upscale(xs, ys, x2s, y2s, rand1, rand2, true, Size.RES1440.first, Size.RES1440.second), "png",
+            fdfs_1440x);
+        System.out.println("Rendered 1440");
+        File fdfs_4kx = new File("gw4_exoad/gen_" + currTimeStr + "/gw4_" + time + "_4kx.png");
+        if (!fdfs_4kx.exists()) {
+          fdfs_4kx.createNewFile();
+        }
+        ImageIO.write(upscale(xs, ys, x2s, y2s, rand1, rand2, true, Size.RES4K.first, Size.RES4K.second), "png",
+            fdfs_4kx);
+        System.out.println("Rendered 4k");
+
+        Desktop.getDesktop().open(file);
       } catch (IOException e1) {
         e1.printStackTrace();
       }
-      System.out.println("OK!");
+      System.out.println("OK! Took me: " + (System.currentTimeMillis() - time) + "ms");
 
     }
   }
